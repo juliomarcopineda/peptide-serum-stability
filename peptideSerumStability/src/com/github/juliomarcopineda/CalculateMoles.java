@@ -1,3 +1,4 @@
+package com.github.juliomarcopineda;
 import java.util.*;
 
 public class CalculateMoles {

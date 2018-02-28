@@ -1,3 +1,5 @@
+package com.github.juliomarcopineda;
+
 import java.io.*;
 import java.util.*;
 
