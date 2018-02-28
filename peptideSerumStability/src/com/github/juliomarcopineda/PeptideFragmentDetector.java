@@ -85,7 +85,7 @@ public class PeptideFragmentDetector {
 			System.out.println("Found " + suggestedFragments.size() + " fragments that matched for data input...");
 			for (String fragment : suggestedFragments) {
 				System.out.println("FRAGMENT: " + fragment);
-				System.out.println("Theoretical weight: " + this.fragments.get(fragment));
+				System.out.println("Theoretical weight: " + Math.round(this.fragments.get(fragment) * 100.0) / 100.0);
 				System.out.println("Starting position: " + this.positions.get(fragment));
 				System.out.println();
 			}
@@ -111,7 +111,7 @@ public class PeptideFragmentDetector {
 			.stream()
 			.filter(e -> e.getKey().length() == size)
 			.forEach(e -> {
-				System.out.println(e.getKey());
+				System.out.println(e.getKey() + "----" + Math.round(e.getValue() * 100.0) / 100.0);
 			});
 		
 		System.out.println();
