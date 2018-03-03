@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.github.juliomarcopineda.peptide.Peptide;
+import com.github.juliomarcopineda.peptide.PeptideType;
+
 /**
  * This class parses through the designated input text format for the peptide serum stability analysis. The general format as follows:
  * 

@@ -1,4 +1,4 @@
-package com.github.juliomarcopineda;
+package com.github.juliomarcopineda.peptide;
 
 public enum PeptideType {
 	AMIDE,

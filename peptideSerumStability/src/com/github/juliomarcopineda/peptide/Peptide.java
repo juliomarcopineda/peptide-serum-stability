@@ -1,4 +1,4 @@
-package com.github.juliomarcopineda;
+package com.github.juliomarcopineda.peptide;
 
 import java.util.List;
 import java.util.Map;

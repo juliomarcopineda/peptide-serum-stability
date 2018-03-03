@@ -1,4 +1,4 @@
-package com.github.juliomarcopineda;
+package com.github.juliomarcopineda.experiments;
 
 import java.io.BufferedReader;
 import java.io.IOException;
