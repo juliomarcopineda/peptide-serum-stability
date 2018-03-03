@@ -14,6 +14,15 @@ public class Peptide {
 	private String sequence;
 	private PeptideType type;
 	private Map<Character, List<Character>> graph;
+	private List<Double> massSpecData;
+	
+	public List<Double> getMassSpecData() {
+		return massSpecData;
+	}
+	
+	public void setMassSpecData(List<Double> massSpecData) {
+		this.massSpecData = massSpecData;
+	}
 	
 	public String getSequence() {
 		return sequence;
