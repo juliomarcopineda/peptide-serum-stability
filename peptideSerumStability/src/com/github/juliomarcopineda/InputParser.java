@@ -68,36 +68,43 @@ public class InputParser {
 				if (lineNumber % 2 == 0) {
 					String[] split = line.split("\\s+");
 					
-					if (split.length % 2 != 0) {
-						throw new IllegalArgumentException();
-					}
-					
 					// Extract input arguments from text file
 					String peptideSequence = split[0];
 					PeptideType type = PeptideType.valueOf(split[1].toUpperCase());
-					List<Integer> indexConnections = new ArrayList<>();
+					List<Integer> connections = new ArrayList<>();
 					
 					if (!type.equals(PeptideType.LINEAR)) {
 						
 						for (int i = 2; i < split.length; i++) {
-							indexConnections.add(Integer.parseInt(split[i]));
+							connections.add(Integer.parseInt(split[i]));
 						}
 					}
 					
 					// Build graph structure from sequence and index connections
-					Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, indexConnections, type);
+					Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, connections, type);
 					
 					// Create Peptide object from data above
 					Peptide peptide = new Peptide();
 					peptide.setSequence(peptideSequence);
 					peptide.setType(type);
-					// peptide.setGraph(graph);
+					peptide.setConnections(connections);
+					peptide.setGraph(graph);
 					
 					// Add to list of peptides
 					peptides.add(peptide);
 				}
 				else {
+					String[] split = line.split("\\s+");
 					
+					if (split.length != 0) {
+						List<Double> massSpecData = Arrays.stream(split)
+							.mapToDouble(i -> Double.parseDouble(i))
+							.boxed()
+							.collect(Collectors.toList());
+						
+						Peptide peptide = peptides.get(peptides.size() - 1);
+						peptide.setMassSpecData(massSpecData);
+					}
 				}
 				
 				lineNumber++;

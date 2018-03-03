@@ -13,8 +13,17 @@ import java.util.Map;
 public class Peptide {
 	private String sequence;
 	private PeptideType type;
+	private List<Integer> connections;
 	private Map<Integer, List<Integer>> graph;
 	private List<Double> massSpecData;
+	
+	public List<Integer> getConnections() {
+		return connections;
+	}
+	
+	public void setConnections(List<Integer> connections) {
+		this.connections = connections;
+	}
 	
 	public List<Double> getMassSpecData() {
 		return massSpecData;
