@@ -1,4 +1,4 @@
-package com.github.juliomarcopineda;
+package com.github.juliomarcopineda.old;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Julio Pineda
  *
  */
-public class PeptideFragmentDetector {
+public class PeptideFragmentDetectorOld {
 	private static final double THRESHOLD = 2.0;
 	
 	private String peptide;
@@ -23,7 +23,7 @@ public class PeptideFragmentDetector {
 	private Map<String, Double> fragments;
 	private Map<String, Integer> positions;
 	
-	public PeptideFragmentDetector(String peptide) {
+	public PeptideFragmentDetectorOld(String peptide) {
 		this.peptide = peptide;
 		this.aminoAcidWeight = createAminoAcideWeightMap();
 	}

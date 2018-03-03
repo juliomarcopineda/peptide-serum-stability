@@ -1,4 +1,4 @@
-package com.github.juliomarcopineda;
+package com.github.juliomarcopineda.old;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.io.InputStreamReader;
  * @author Julio Pineda
  *
  */
-public class PeptideSerumStability {
+public class PeptideSerumStabilityOld {
 
 	public static void main(String[] args) throws IOException {
 		String peptide = args[0].toUpperCase();
@@ -27,7 +27,7 @@ public class PeptideSerumStability {
 		
 		printIntro(peptide);
 		
-		PeptideFragmentDetector detector = new PeptideFragmentDetector(peptide);
+		PeptideFragmentDetectorOld detector = new PeptideFragmentDetectorOld(peptide);
 		detector.determineAllFragments();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

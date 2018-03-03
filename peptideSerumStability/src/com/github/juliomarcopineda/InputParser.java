@@ -39,6 +39,14 @@ public class InputParser {
 		
 	}
 	
+	public List<Peptide> getPeptides() {
+		return peptides;
+	}
+	
+	public void setPeptides(List<Peptide> peptides) {
+		this.peptides = peptides;
+	}
+	
 	/**
 	 * Begins the process of parsing through the input text file.
 	 * 
