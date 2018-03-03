@@ -13,7 +13,7 @@ import java.util.Map;
 public class Peptide {
 	private String sequence;
 	private PeptideType type;
-	private Map<Character, List<Character>> graph;
+	private Map<Integer, List<Integer>> graph;
 	private List<Double> massSpecData;
 	
 	public List<Double> getMassSpecData() {
@@ -40,11 +40,11 @@ public class Peptide {
 		this.type = type;
 	}
 	
-	public Map<Character, List<Character>> getGraph() {
+	public Map<Integer, List<Integer>> getGraph() {
 		return graph;
 	}
 	
-	public void setGraph(Map<Character, List<Character>> graph) {
+	public void setGraph(Map<Integer, List<Integer>> graph) {
 		this.graph = graph;
 	}
 	

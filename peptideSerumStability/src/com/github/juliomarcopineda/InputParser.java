@@ -3,10 +3,14 @@ package com.github.juliomarcopineda;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * This class parses through the designated input text format for the peptide serum stability analysis. The general format as follows:
@@ -29,6 +33,10 @@ public class InputParser {
 	
 	public InputParser(String inputFile) {
 		this.inputFile = inputFile;
+	}
+	
+	public InputParser() {
+		
 	}
 	
 	/**
@@ -66,13 +74,13 @@ public class InputParser {
 					}
 					
 					// Build graph structure from sequence and index connections
-					Map<Character, List<Character>> graph = createGraphStructure(peptideSequence, indexConnections, type);
+					Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, indexConnections, type);
 					
 					// Create Peptide object from data above
 					Peptide peptide = new Peptide();
 					peptide.setSequence(peptideSequence);
 					peptide.setType(type);
-					peptide.setGraph(graph);
+					// peptide.setGraph(graph);
 					
 					// Add to list of peptides
 					peptides.add(peptide);
@@ -100,17 +108,138 @@ public class InputParser {
 	 * @param indexConnections
 	 * @return
 	 */
-	private Map<Character, List<Character>> createGraphStructure(String peptideSequence, List<Integer> indexConnections, PeptideType type) {
-		
-		Map<Character, List<Character>> graph = new LinkedHashMap<>();
+	private Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
 		
 		// Create the graph structure of the peptide base sequence
-		for (int i = 0; i < peptideSequence.length() - 1; i++) {
-			char source = peptideSequence.charAt(i);
-			char target = peptideSequence.charAt(i + 1);
-			
+		Map<Integer, List<Integer>> graph = IntStream.range(0, peptideSequence.length() - 1)
+			.mapToObj(source -> {
+				int target = source + 1;
+				
+				List<Integer> targets = new ArrayList<>();
+				targets.add(target);
+				
+				return new AbstractMap.SimpleEntry<Integer, List<Integer>>(source, targets);
+			})
+			.sorted(Map.Entry.comparingByKey())
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (collision1, collision2) -> collision1, LinkedHashMap::new));
+		
+		// Add any cyclic connections if connections is not empty
+		if (!connections.isEmpty()) {
+			switch (type) {
+				case AMIDE:
+					for (int i = 0; i < connections.size(); i++) {
+						if (i % 2 == 0) {
+							graph.get(connections.get(i))
+								.add(connections.get(i + 1));
+						}
+						else {
+							graph.get(connections.get(i))
+								.add(connections.get(i - 1));
+						}
+					}
+					
+					break;
+				
+				case DFBP:
+					int dfbpIndex = peptideSequence.length();
+					
+					for (int connection : connections) {
+						// Add connections from DFBP
+						if (!graph.containsKey(dfbpIndex)) {
+							List<Integer> targets = new ArrayList<>();
+							targets.add(connection);
+							
+							graph.put(dfbpIndex, targets);
+						}
+						else {
+							graph.get(dfbpIndex)
+								.add(connection);
+						}
+						
+						// Add connections to DFBP
+						graph.get(connection)
+							.add(dfbpIndex);
+					}
+					
+					break;
+				case DISULFIDE:
+					// Create disulfide bridge
+					int s1Index = peptideSequence.length();
+					int s2Index = s1Index + 1;
+					
+					List<Integer> s1ToS2 = new ArrayList<>();
+					s1ToS2.add(s2Index);
+					
+					List<Integer> s2ToS1 = new ArrayList<>();
+					s2ToS1.add(s1Index);
+					
+					graph.put(s1Index, s1ToS2);
+					graph.put(s2Index, s2ToS1);
+					
+					// Add connections from peptide base
+					graph.get(connections.get(0))
+						.add(s1Index);
+					graph.get(connections.get(1))
+						.add(s2Index);
+					
+					// Add connections from disulfide bridge
+					graph.get(s1Index)
+						.add(connections.get(0));
+					graph.get(s2Index)
+						.add(connections.get(1));
+					
+					break;
+				case LINEAR:
+					break;
+			}
 		}
 		
 		return graph;
+	}
+	
+	public static void main(String[] args) {
+		String seq = "YEQDPWGVKK";
+		
+		InputParser test = new InputParser();
+		List<Integer> connections = Arrays.asList(2, 8);
+		
+		Map<Integer, List<Integer>> graph = test.createGraphStructure(seq, connections, PeptideType.DISULFIDE);
+		
+		System.out.println("SEQUENCE: " + seq);
+		System.out.println();
+		
+		graph.entrySet()
+			.forEach(e -> {
+				int source = e.getKey();
+				List<Integer> targets = e.getValue();
+				
+				if (source < seq.length()) {
+					System.out.println(seq.charAt(source) + " -> " + printTargets(targets, seq));
+				}
+				else {
+					System.out.println(source + " -> " + printTargets(targets, seq));
+				}
+				
+			});
+	}
+	
+	private static String printTargets(List<Integer> targets, String sequence) {
+		
+		StringBuilder sb = new StringBuilder();
+		
+		for (int target : targets) {
+			if (sb.length() != 0) {
+				sb.append(", ");
+			}
+			
+			if (target < sequence.length()) {
+				sb.append(sequence.charAt(target));
+			}
+			else {
+				sb.append(target);
+			}
+		}
+		
+		return sb.toString();
 	}
 }
