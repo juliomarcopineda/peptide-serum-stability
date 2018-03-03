@@ -10,8 +10,12 @@ public class SerumStability {
 		
 		InputParser parser = new InputParser(inputFile);
 		parser.parse();
-		
 		List<Peptide> peptides = parser.getPeptides();
+		
+		printInputData(peptides);
+	}
+	
+	private static void printInputData(List<Peptide> peptides) {
 		peptides.stream()
 			.forEach(peptide -> {
 				String seq = peptide.getSequence();
@@ -48,6 +52,7 @@ public class SerumStability {
 				
 				System.out.println();
 			});
+		
 	}
 	
 	private static String printTargets(List<Integer> targets, String sequence) {
