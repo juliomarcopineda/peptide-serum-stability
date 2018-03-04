@@ -17,67 +17,100 @@ public class FragmentAnalyzer {
 	private Peptide peptide;
 	private Map<Character, Double> weights;
 	
+	private List<List<Integer>> fragments;
+	
 	public FragmentAnalyzer(Peptide peptide) {
 		this.peptide = peptide;
 		this.weights = createAminoAcideWeightMap();
+		this.fragments = new ArrayList<>();
 	}
 	
-	public FragmentAnalyzer() {
-		this.weights = createAminoAcideWeightMap();
+	public List<List<Integer>> getFragments() {
+		return fragments;
 	}
 	
-	public void findFragment(Map<Integer, List<Integer>> graph, double data) {
+	public void setFragments(List<List<Integer>> fragments) {
+		this.fragments = fragments;
+	}
+	
+	/**
+	 * Initiates the process of finding all the possible fragments of the peptide.
+	 */
+	public void findAllFragments() {
+		Map<Integer, List<Integer>> graph = this.peptide.getGraph();
 		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
 			int start = entry.getKey();
 			
+			walkGraph(start, graph);
 		}
 	}
 	
-	public void walkGraph(int start, Map<Integer, List<Integer>> graph, double data) {
+	/**
+	 * Given a starting node (amino acid) and the graph representation of the peptide, traverse all the possible
+	 * paths from that starting node.
+	 * 
+	 * Recursive backtracking is the algorithm used to traverse every possible path from the starting node. See the private helper method to check the
+	 * details of the recursive backtracking implementation.
+	 * 
+	 * @param start
+	 * @param graph
+	 */
+	public void walkGraph(int start, Map<Integer, List<Integer>> graph) {
 		List<Integer> fragmentIndex = new ArrayList<>();
 		fragmentIndex.add(start);
 		
-		walkGraph(start, -1, start, graph, fragmentIndex, data);
+		walkGraph(start, -1, start, graph, fragmentIndex);
 	}
 	
-	private void walkGraph(int root, int before, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex, double data) {
-		double fragmentWeight = fragmentWeight(fragmentIndex);
-		
-		//		if ((fragmentWeight - data) > 10.0) { // fragment is too big
-		//			System.out.println("Too big");
-		//			return;
-		//		}
-		if (!graph.containsKey(start)) { // traversed the end of the peptide
-			System.out.println("End of peptide");
-			System.out.println();
+	/**
+	 * Helper method for the recursive backtracking implementation of traversing the graph given a starting node.
+	 * 
+	 * The root parameter is the starting node of the algorithm. If the root is visited, a cycle is formed and the traversing is terminated.
+	 * The before parameter keeps track of the last node visited by the algorithm. This prevents the traversing to go back prematurely and also prevent
+	 * an infinite loop in the linker of cyclic peptides.
+	 * The start parameter indicates the current location of traversing the graph.
+	 * The fragmentIndex keeps track of the traversed nodes during the recursive backtrackign step.
+	 * 
+	 * This method also saves all possible fragments visited by the algorithm into the fragments field.
+	 * 
+	 * @param root
+	 * @param before
+	 * @param start
+	 * @param graph
+	 * @param fragmentIndex
+	 */
+	private void walkGraph(int root, int before, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex) {
+		if (!graph.containsKey(start)) { // Traversed the end of the peptide
 			return;
 		}
-		//		else if (Math.abs(data - fragmentWeight) <= 2.0) { // found a fragment!
-		//			System.out.println("FOUND ONE!");
-		//			return;
-		//		}
 		else {
 			List<Integer> targets = graph.get(start);
 			
+			// Iterate over the different choices during a branching path
 			for (int i = 0; i < targets.size(); i++) {
 				int target = targets.get(i);
 				
-				if (target == before) {
+				if (target == before) { // Prevents walk to backtrack
 					continue;
 				}
 				
-				if (root == target) {
-					System.out.println("Formed cycle: " + fragmentIndex.toString() + " " + target);
-					System.out.println();
+				if (root == target) { // Formed a cycle and terminates walk in this direction
 					return;
 				}
 				
+				// Keeping track of traversed nodes
 				fragmentIndex.add(target);
-				System.out.println(fragmentIndex);
 				
-				walkGraph(root, start, target, graph, fragmentIndex, data);
+				// Create a new list for each valid fragment
+				List<Integer> copyFragmentIndex = new ArrayList<>();
+				copyFragmentIndex.addAll(fragmentIndex);
+				this.fragments.add(copyFragmentIndex);
+				
+				// Recursive step
+				walkGraph(root, start, target, graph, fragmentIndex);
+				
+				// Backtracking step when finding a terminal/base case
 				fragmentIndex.remove(fragmentIndex.size() - 1);
-				System.out.println(fragmentIndex);
 			}
 		}
 	}
@@ -126,9 +159,9 @@ public class FragmentAnalyzer {
 	}
 	
 	public static void main(String[] args) {
-		String peptideSequence = "DGYEQDPWGVRYWYGKKKKKB";
+		String peptideSequence = "CGYEQDPWGVRYWYGCKKKKB";
 		List<Integer> connections = Arrays.asList(0, 15);
-		PeptideType type = PeptideType.AMIDE;
+		PeptideType type = PeptideType.DFBP;
 		Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, connections, type);
 		
 		Peptide peptide = new Peptide();
@@ -149,17 +182,12 @@ public class FragmentAnalyzer {
 		
 		System.out.println();
 		
-		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
-			int start = entry.getKey();
-			System.out.println("START: " + start);
-			analyzer.walkGraph(start, graph, 886.54);
-			System.out.println();
-			
-		}
-		
-		//		int start = 14;
-		//		analyzer.walkGraph(start, graph, 886.54);
-		//		System.out.println();
+		analyzer.findAllFragments();
+		List<List<Integer>> fragments = analyzer.getFragments();
+		fragments.stream()
+			.forEach(System.out::println);
+		System.out.println();
+		System.out.println(fragments.size());
 	}
 	
 	private static Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
