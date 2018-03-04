@@ -7,6 +7,7 @@ import com.github.juliomarcopineda.peptide.Peptide;
 public class SerumStability {
 	public static void main(String[] args) {
 		String inputFile = "../peptide-test.txt";
+		String outputFile = "../test-output.txt";
 		
 		InputParser parser = new InputParser(inputFile);
 		parser.parse();
