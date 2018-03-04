@@ -37,10 +37,10 @@ public class FragmentAnalyzer {
 		List<Integer> fragmentIndex = new ArrayList<>();
 		fragmentIndex.add(start);
 		
-		walkGraph(start, start, graph, fragmentIndex, data);
+		walkGraph(start, -1, start, graph, fragmentIndex, data);
 	}
 	
-	private void walkGraph(int root, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex, double data) {
+	private void walkGraph(int root, int before, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex, double data) {
 		double fragmentWeight = fragmentWeight(fragmentIndex);
 		
 		//		if ((fragmentWeight - data) > 10.0) { // fragment is too big
@@ -59,12 +59,12 @@ public class FragmentAnalyzer {
 		else {
 			List<Integer> targets = graph.get(start);
 			
-			//			if (targets.contains(before)) {
-			//				targets.remove(targets.indexOf(before));
-			//			}
-			
 			for (int i = 0; i < targets.size(); i++) {
 				int target = targets.get(i);
+				
+				if (target == before) {
+					continue;
+				}
 				
 				if (root == target) {
 					System.out.println("Formed cycle: " + fragmentIndex.toString() + " " + target);
@@ -75,7 +75,7 @@ public class FragmentAnalyzer {
 				fragmentIndex.add(target);
 				System.out.println(fragmentIndex);
 				
-				walkGraph(root, target, graph, fragmentIndex, data);
+				walkGraph(root, start, target, graph, fragmentIndex, data);
 				fragmentIndex.remove(fragmentIndex.size() - 1);
 				System.out.println(fragmentIndex);
 			}
@@ -149,18 +149,17 @@ public class FragmentAnalyzer {
 		
 		System.out.println();
 		
-		//		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
-		//			int start = entry.getKey();
-		//			analyzer.walkGraph(start, graph, 886.54);
-		//			System.out.println();
-		//			
-		//			break;
-		//			
-		//		}
+		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
+			int start = entry.getKey();
+			System.out.println("START: " + start);
+			analyzer.walkGraph(start, graph, 886.54);
+			System.out.println();
+			
+		}
 		
-		int start = 1;
-		analyzer.walkGraph(start, graph, 886.54);
-		System.out.println();
+		//		int start = 14;
+		//		analyzer.walkGraph(start, graph, 886.54);
+		//		System.out.println();
 	}
 	
 	private static Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
