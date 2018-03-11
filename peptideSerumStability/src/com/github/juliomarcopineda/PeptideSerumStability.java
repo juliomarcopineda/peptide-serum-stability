@@ -17,12 +17,6 @@ import com.github.juliomarcopineda.peptide.PeptideType;
 public class PeptideSerumStability {
 	
 	public static void main(String[] args) {
-		
-		String test = "bla";
-		System.out.println(PeptideType.valueOf(test));
-		
-		System.exit(0);
-		
 		if (args[0].toLowerCase()
 			.equals("input")) {
 			
@@ -45,8 +39,9 @@ public class PeptideSerumStability {
 				// Set the peptide sequence
 				System.out.println("Please enter the peptide sequence. If peptide is not linear, do not include the linkers");
 				System.out.print("Peptide sequence: ");
-				
 				String peptideSequence = br.readLine();
+				System.out.println();
+				
 				peptide.setSequence(peptideSequence);
 				
 				// Set the peptide type
@@ -54,6 +49,7 @@ public class PeptideSerumStability {
 				System.out.print("Peptide Type: ");
 				
 				String typeString = br.readLine();
+				System.out.println();
 				try {
 					PeptideType type = PeptideType.valueOf(typeString.toUpperCase());
 					peptide.setType(type);
@@ -61,10 +57,11 @@ public class PeptideSerumStability {
 					// Set the conenctions of the peptide
 					List<Integer> connections = new ArrayList<>();
 					if (!type.equals(PeptideType.LINEAR)) {
-						System.out.println("Peptide type is cyclic.");
-						System.out.println("Please enter the indices where the cyclic conenctions are. Seperate the index with commas");
-						
+						System.out.println("Please enter the indices where the cyclic conenctions are. Seperate the indices with commas.");
+						System.out.print("Connections: ");
 						String connectionsString = br.readLine();
+						System.out.println();
+						
 						String[] split = connectionsString.split(",");
 						
 						for (String indexString : split) {
@@ -85,7 +82,11 @@ public class PeptideSerumStability {
 				
 				// Create FragmentAnalyzer and then start interactive session
 				FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide);
-				interactiveSession(analyzer);
+				analyzer.findAllFragments()
+					.measureAllFragmentWeights();
+				interactiveSession(analyzer, br);
+				
+				System.out.println("Goodbye!");
 			}
 			catch (IOException e) {
 				e.printStackTrace();
@@ -98,8 +99,101 @@ public class PeptideSerumStability {
 	 * 
 	 * @param analyzer
 	 */
-	private static void interactiveSession(FragmentAnalyzer analyzer) {
-		
+	private static void interactiveSession(FragmentAnalyzer analyzer, BufferedReader br) {
+		try {
+			String prompt = "in"; // Go in the while loop for the first time
+			
+			while (!prompt.substring(0, 1)
+				.toUpperCase()
+				.equals("Q")) {
+				
+				menuPrompt();
+				prompt = br.readLine();
+				System.out.println();
+				
+				if (prompt.substring(0, 1)
+					.toUpperCase()
+					.equals("C")) {
+					
+					String proceed = "Y";
+					
+					while (proceed.substring(0, 1)
+						.toUpperCase()
+						.equals("Y")) {
+						
+						System.out.print("Enter data from mass spectrometry: ");
+						double data = Double.parseDouble(br.readLine());
+						System.out.print("Enter threshold to comapre theoretical molecular weights (suggested 5.0): ");
+						double threshold = Double.parseDouble(br.readLine());
+						System.out.println();
+						
+						Map<String, Double> suggestedFragments = analyzer.suggestFragments(data, threshold);
+						suggestedFragments.entrySet()
+							.stream()
+							.forEach(entry -> {
+								String fragment = entry.getKey();
+								double weight = entry.getValue();
+								
+								System.out.println("Suggested fragment: " + fragment);
+								System.out.println("Calculated weight: " + weight);
+								System.out.println();
+							});
+						
+						System.out.print("More data? (Y/N) ");
+						proceed = br.readLine();
+						System.out.println();
+					}
+				}
+				
+				else if (prompt.substring(0, 1)
+					.toUpperCase()
+					.equals("P")) {
+					
+					String proceed = "Y";
+					while (proceed.substring(0, 1)
+						.toUpperCase()
+						.equals("Y")) {
+						
+						Map<String, Double> fragments = analyzer.getFragmentWeights();
+						
+						System.out.print("What fragment size to print? ");
+						int size = Integer.parseInt(br.readLine());
+						
+						for (Map.Entry<String, Double> entry : fragments.entrySet()) {
+							String fragment = entry.getKey();
+							double weight = Math.round(entry.getValue() * 100.0) / 100.0;
+							
+							if (!fragment.contains("#")) {
+								int length = fragment.length();
+								
+								if (length == size) {
+									System.out.println(fragment + "\t" + weight);
+								}
+							}
+							else {
+								int length = 0;
+								String[] split = fragment.split("#");
+								
+								for (String fragmentPiece : split) {
+									length += fragmentPiece.length();
+								}
+								
+								if (length == size) {
+									System.out.println(fragment + "\t" + weight);
+								}
+							}
+						}
+						System.out.println();
+						System.out.print("Print more? (Y/N) ");
+						proceed = br.readLine();
+						System.out.println();
+					}
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -196,6 +290,15 @@ public class PeptideSerumStability {
 		}
 		
 		return graph;
+	}
+	
+	/**
+	 * Menu prompt for interactive mode of the program.
+	 */
+	private static void menuPrompt() {
+		System.out.println("What do you want to do?");
+		System.out.println("| (C)ompare | (P)rint | (Q)uit |");
+		System.out.print("Enter: ");
 	}
 	
 	/**

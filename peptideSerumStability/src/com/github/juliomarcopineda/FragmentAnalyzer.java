@@ -84,6 +84,8 @@ public class FragmentAnalyzer {
 	 * @return
 	 */
 	public FragmentAnalyzer measureAllFragmentWeights() {
+		System.out.println("Calculating molecular weights of all fragments...");
+		
 		Map<String, Double> fragmentWeights = new HashMap<>();
 		PeptideType type = this.peptide.getType();
 		
@@ -99,6 +101,9 @@ public class FragmentAnalyzer {
 		}
 		
 		this.fragmentWeights = fragmentWeights;
+		
+		System.out.println("Done!");
+		System.out.println();
 		
 		return this;
 	}
@@ -463,6 +468,8 @@ public class FragmentAnalyzer {
 	 * Initiates the process of finding all the possible fragments of the peptide.
 	 */
 	public FragmentAnalyzer findAllFragments() {
+		System.out.println("Finding all peptde fragments...");
+		
 		Map<Integer, List<Integer>> graph = this.peptide.getGraph();
 		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
 			int start = entry.getKey();
@@ -470,6 +477,8 @@ public class FragmentAnalyzer {
 			walkGraph(start, graph);
 		}
 		
+		System.out.println("Done");
+		System.out.println();
 		return this;
 	}
 	
