@@ -226,12 +226,13 @@ public class FragmentAnalyzer {
 				}
 			}
 			
-			//			List<List<Integer>> cyclicFragments = connectionInFragments.get(-1);
-			//			for (List<Integer> cyclicFragmentIndex : cyclicFragments) {
-			//				StringBuilder sb = new StringBuilder();
-			//				sb.append("*" + getPeptideStringRepresentation(cyclicFragmentIndex, type) + "*");
-			//				fragmentWeights.put(sb.toString(), calculateCyclicFragmentWeight(sb.toString()));
-			//			}
+			List<List<Integer>> cyclicFragments = connectionInFragments.get(-1);
+			
+			for (List<Integer> cyclicFragmentIndex : cyclicFragments) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("*" + getPeptideStringRepresentation(cyclicFragmentIndex, type) + "*");
+				fragmentWeights.put(sb.toString(), calculateCyclicFragmentWeight(sb.toString()));
+			}
 		}
 		
 	}
@@ -269,20 +270,24 @@ public class FragmentAnalyzer {
 	private int determineConnectionInFragment(List<Integer> fragmentIndex, List<Integer> connections) {
 		int result = -2;
 		
-		int connectionCount = 0;
-		int tempIndex = -1;
+		List<Integer> connectionIndices = new ArrayList<>();
+		
 		for (int index : fragmentIndex) {
 			if (connections.contains(index)) {
-				tempIndex = index;
-				connectionCount++;
+				connectionIndices.add(index);
 			}
 		}
 		
-		if (connectionCount == 1) {
-			result = tempIndex;
+		if (connectionIndices.size() == 1) {
+			result = connectionIndices.get(0);
 		}
-		else if (connectionCount == 2) {
-			result = -1;
+		else if (connectionIndices.size() == 2) {
+			int conn1 = fragmentIndex.indexOf(connectionIndices.get(0));
+			int conn2 = fragmentIndex.indexOf(connectionIndices.get(1));
+			
+			if (Math.abs(conn1 - conn2) > 1) {
+				result = -1;
+			}
 		}
 		
 		return result;

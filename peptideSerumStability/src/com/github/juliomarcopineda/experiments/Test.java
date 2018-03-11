@@ -35,7 +35,7 @@ public class Test {
 		fragments.entrySet()
 			.stream()
 			.filter(e -> e.getKey()
-				.contains("R*G"))
+				.charAt(0) == '*')
 			.forEach(System.out::println);
 		
 		//		double threshold = 10.0;
