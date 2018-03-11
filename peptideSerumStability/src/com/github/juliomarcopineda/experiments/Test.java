@@ -15,10 +15,10 @@ import com.github.juliomarcopineda.peptide.PeptideType;
 
 public class Test {
 	public static void main(String[] args) {
-		String peptideSequence = "DGYEQDPWGVRYWYGKKKKKB";
+		String peptideSequence = "CGYEQDPWGVRYWYGCKKKKB";
 		List<Integer> connections = Arrays.asList(0, 15);
 		// List<Integer> connections = new ArrayList<>();
-		PeptideType type = PeptideType.AMIDE;
+		PeptideType type = PeptideType.DFBP;
 		Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, connections, type);
 		
 		Peptide peptide = new Peptide();
@@ -35,11 +35,11 @@ public class Test {
 		fragments.entrySet()
 			.stream()
 			.filter(e -> e.getKey()
-				.charAt(0) == '*')
+				.charAt(0) == '#')
 			.forEach(System.out::println);
 		
-		//		double threshold = 10.0;
-		//		double massSpecData = 650.02;
+		//		double threshold = 5.0;
+		//		double massSpecData = 655.74;
 		//		
 		//		Map<String, Double> suggestedFragments = analyzer.suggestFragments(massSpecData, threshold);
 		//		suggestedFragments.entrySet()

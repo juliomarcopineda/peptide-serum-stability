@@ -11,6 +11,12 @@ import java.util.Map;
 import com.github.juliomarcopineda.peptide.Peptide;
 import com.github.juliomarcopineda.peptide.PeptideType;
 
+/**
+ * FragmentAnalyzer accepts a Peptide and determines all the possible fragments that can result from a peptide serum stability study. 
+ * 
+ * @author Julio Pineda
+ *
+ */
 public class FragmentAnalyzer {
 	private Peptide peptide;
 	private Map<Character, Double> weights;
@@ -18,10 +24,19 @@ public class FragmentAnalyzer {
 	private List<List<Integer>> fragments;
 	private Map<String, Double> fragmentWeights;
 	
+	/**
+	 * Constructor that accepts a Peptide object.
+	 * 
+	 * @param peptide
+	 */
 	public FragmentAnalyzer(Peptide peptide) {
 		this.peptide = peptide;
 		this.weights = createAminoAcideWeightMap();
 		this.fragments = new ArrayList<>();
+	}
+	
+	public FragmentAnalyzer() {
+		this.weights = createAminoAcideWeightMap();
 	}
 	
 	public Map<String, Double> getFragmentWeights() {
@@ -40,6 +55,13 @@ public class FragmentAnalyzer {
 		this.fragments = fragments;
 	}
 	
+	/**
+	 * Given the mass spec data and a threshold, returns all the fragments that are withing this threshold.
+	 * 
+	 * @param massSpecData
+	 * @param threshold
+	 * @return
+	 */
 	public Map<String, Double> suggestFragments(double massSpecData, double threshold) {
 		Map<String, Double> suggestedFragments = new HashMap<>();
 		
@@ -63,7 +85,6 @@ public class FragmentAnalyzer {
 	 */
 	public FragmentAnalyzer measureAllFragmentWeights() {
 		Map<String, Double> fragmentWeights = new HashMap<>();
-		
 		PeptideType type = this.peptide.getType();
 		
 		for (List<Integer> fragmentIndex : this.fragments) {
@@ -73,180 +94,265 @@ public class FragmentAnalyzer {
 			fragmentWeights.put(fragment, weight);
 		}
 		
-		findBranchedFragments(fragmentWeights, type);
+		if (!type.equals(PeptideType.LINEAR)) {
+			findBranchedAndCyclicFragments(fragmentWeights);
+		}
 		
 		this.fragmentWeights = fragmentWeights;
 		
 		return this;
 	}
 	
-	private void findBranchedFragments(Map<String, Double> fragmentWeights, PeptideType type) {
+	/**
+	 * Determines all the posisble branched fragments of a Peptide and populated the map of <fragment, weight>. 
+	 * Note that the current implementation can only handle a cyclic peptide with only one cycle.
+	 * 
+	 * @param fragmentWeights
+	 */
+	private void findBranchedAndCyclicFragments(Map<String, Double> fragmentWeights) {
+		PeptideType type = this.peptide.getType();
 		List<Integer> connections = this.peptide.getConnections();
 		String peptideSequence = this.peptide.getSequence();
 		
 		Map<Integer, List<List<Integer>>> connectionInFragments = findConnectionsInFragments(connections);
 		
-		if (!type.equals(PeptideType.LINEAR)) {
-			int connection1 = connections.get(0);
-			int connection2 = connections.get(1);
+		int connection1 = connections.get(0);
+		int connection2 = connections.get(1);
+		
+		List<List<Integer>> fragmentsWith1 = connectionInFragments.get(connection1);
+		List<List<Integer>> fragmentsWith2 = connectionInFragments.get(connection2);
+		
+		for (List<Integer> fragmentWith1 : fragmentsWith1) {
+			int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
 			
-			List<List<Integer>> fragmentsWith1 = connectionInFragments.get(connection1);
-			List<List<Integer>> fragmentsWith2 = connectionInFragments.get(connection2);
-			
-			for (List<Integer> fragmentWith1 : fragmentsWith1) {
-				int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
-				
-				StringBuilder sb1 = new StringBuilder();
-				sb1.append(getPeptideStringRepresentation(fragmentWith1, type));
-				switch (type) {
-					case DFBP:
-						if (fragmentWith1.contains(peptideSequence.length())) {
-							continue;
-						}
-						
-						sb1.append("*2");
-						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-						break;
-					case DISULFIDE:
-						if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
-							continue;
-						}
-						
-						sb1.append("*S");
-						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-						break;
-					case AMIDE:
-						break;
-					case LINEAR:
-						break;
-					default:
-						break;
-				}
-				
-				for (List<Integer> fragmentWith2 : fragmentsWith2) {
-					int firstIndex = fragmentWith2.get(0);
-					
-					StringBuilder sb2 = new StringBuilder();
-					sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-					if (lastIndex != firstIndex) {
-						switch (type) {
-							case DFBP:
-								if (fragmentWith2.contains(peptideSequence.length())) {
-									continue;
-								}
-								
-								sb2.append("*2*" + getPeptideStringRepresentation(fragmentWith2, type));
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case DISULFIDE:
-								if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
-									continue;
-								}
-								
-								sb2.append("*SS*" + getPeptideStringRepresentation(fragmentWith2, type));
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case AMIDE:
-								sb2.append("*" + getPeptideStringRepresentation(fragmentWith2, type));
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case LINEAR:
-								break;
-							default:
-								break;
-						}
+			StringBuilder sb1 = new StringBuilder();
+			sb1.append(getPeptideStringRepresentation(fragmentWith1, type));
+			switch (type) {
+				case DFBP:
+					if (fragmentWith1.contains(peptideSequence.length())) {
+						continue;
 					}
-				}
+					
+					sb1.append("#2");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					break;
+				case DISULFIDE:
+					if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
+						continue;
+					}
+					
+					sb1.append("#S");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					break;
+				case AMIDE:
+					break;
+				case LINEAR:
+					break;
+				default:
+					break;
 			}
 			
 			for (List<Integer> fragmentWith2 : fragmentsWith2) {
 				int firstIndex = fragmentWith2.get(0);
 				
-				StringBuilder sb1 = new StringBuilder();
-				sb1.append(getPeptideStringRepresentation(fragmentWith2, type));
-				switch (type) {
-					case DFBP:
-						if (fragmentWith2.contains(peptideSequence.length())) {
-							continue;
-						}
-						
-						sb1.append("*2");
-						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-						break;
-					case DISULFIDE:
-						if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
-							continue;
-						}
-						
-						sb1.append("*S");
-						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-						break;
-					case AMIDE:
-						break;
-					case LINEAR:
-						break;
-					default:
-						break;
-				}
-				
-				for (List<Integer> fragmentWith1 : fragmentsWith1) {
-					int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
-					
-					StringBuilder sb2 = new StringBuilder();
-					sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-					if (lastIndex != firstIndex) {
-						switch (type) {
-							case DFBP:
-								if (fragmentWith1.contains(peptideSequence.length())) {
-									continue;
-								}
-								
-								sb2.append("*2*" + getPeptideStringRepresentation(fragmentWith1, type));
-								
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case DISULFIDE:
-								if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
-									continue;
-								}
-								
-								sb2.append("*SS*" + getPeptideStringRepresentation(fragmentWith1, type));
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case AMIDE:
-								sb2.append("*" + getPeptideStringRepresentation(fragmentWith1, type));
-								fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
-								break;
-							case LINEAR:
-								break;
-							default:
-								break;
-						}
+				StringBuilder sb2 = new StringBuilder();
+				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
+				if (lastIndex != firstIndex) {
+					switch (type) {
+						case DFBP:
+							if (fragmentWith2.contains(peptideSequence.length())) {
+								continue;
+							}
+							
+							sb2.append("#2#" + getPeptideStringRepresentation(fragmentWith2, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case DISULFIDE:
+							if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
+								continue;
+							}
+							
+							sb2.append("#SS#" + getPeptideStringRepresentation(fragmentWith2, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case AMIDE:
+							sb2.append("#" + getPeptideStringRepresentation(fragmentWith2, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case LINEAR:
+							break;
+						default:
+							break;
 					}
 				}
 			}
+		}
+		
+		for (List<Integer> fragmentWith2 : fragmentsWith2) {
+			int firstIndex = fragmentWith2.get(0);
 			
-			List<List<Integer>> cyclicFragments = connectionInFragments.get(-1);
+			StringBuilder sb1 = new StringBuilder();
+			sb1.append(getPeptideStringRepresentation(fragmentWith2, type));
+			switch (type) {
+				case DFBP:
+					if (fragmentWith2.contains(peptideSequence.length())) {
+						continue;
+					}
+					
+					sb1.append("#2");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					break;
+				case DISULFIDE:
+					if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
+						continue;
+					}
+					
+					sb1.append("#S");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					break;
+				case AMIDE:
+					break;
+				case LINEAR:
+					break;
+				default:
+					break;
+			}
 			
-			for (List<Integer> cyclicFragmentIndex : cyclicFragments) {
+			for (List<Integer> fragmentWith1 : fragmentsWith1) {
+				int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
+				
+				StringBuilder sb2 = new StringBuilder();
+				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
+				if (lastIndex != firstIndex) {
+					switch (type) {
+						case DFBP:
+							if (fragmentWith1.contains(peptideSequence.length())) {
+								continue;
+							}
+							
+							sb2.append("#2#" + getPeptideStringRepresentation(fragmentWith1, type));
+							
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case DISULFIDE:
+							if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
+								continue;
+							}
+							
+							sb2.append("#SS#" + getPeptideStringRepresentation(fragmentWith1, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case AMIDE:
+							sb2.append("#" + getPeptideStringRepresentation(fragmentWith1, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
+						case LINEAR:
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		}
+		
+		List<List<Integer>> possibleCyclicFragments = connectionInFragments.get(-1);
+		
+		for (List<Integer> possibleCyclicFragmentIndex : possibleCyclicFragments) {
+			if (isCyclicFragment(possibleCyclicFragmentIndex, connections)) {
 				StringBuilder sb = new StringBuilder();
-				sb.append("*" + getPeptideStringRepresentation(cyclicFragmentIndex, type) + "*");
-				fragmentWeights.put(sb.toString(), calculateCyclicFragmentWeight(sb.toString()));
+				sb.append("#" + getPeptideStringRepresentation(possibleCyclicFragmentIndex, type) + "#");
+				fragmentWeights.put(sb.toString(), calculateCyclicFragmentWeight(sb.toString(), type));
 			}
 		}
 		
 	}
 	
+	/**
+	 * Determines if a possible cyclic fragment is truly a cyclic fragment.
+	 * 
+	 * @param possibleCyclicFragmentIndex
+	 * @param connections
+	 * @return
+	 */
+	private boolean isCyclicFragment(List<Integer> possibleCyclicFragmentIndex, List<Integer> connections) {
+		
+		for (int connection : connections) {
+			int index = possibleCyclicFragmentIndex.indexOf(connection);
+			
+			if (index != connection) {
+				return false;
+			}
+		}
+		
+		String peptideSequence = peptide.getSequence();
+		if (possibleCyclicFragmentIndex.contains(peptideSequence.length()) || possibleCyclicFragmentIndex.contains(peptideSequence.length() + 1)) {
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Given the String representation of a branched fragment, calculates the molecular weight of this branched fragment.
+	 * 
+	 * @param branchedFragment
+	 * @return
+	 */
 	private double calculateBranchedFragmentWeight(String branchedFragment) {
-		// TODO
-		return 0;
+		double sum = 0;
+		
+		String[] split = branchedFragment.split("#");
+		for (String fragment : split) {
+			double weight = calculateFragmentWeight(fragment);
+			sum += weight;
+		}
+		
+		if (!this.peptide.getType()
+			.equals(PeptideType.AMIDE)) {
+			sum = sum - (18.0 * (split.length - 1));
+		}
+		
+		return sum;
 	}
 	
-	private double calculateCyclicFragmentWeight(String cyclicFragment) {
-		// TODO
-		return 0;
+	/**
+	 * Caluculates the molecular weights of cyclic fragments given its string representation and the peptide type.
+	 * 
+	 * @param cyclicFragment
+	 * @param type
+	 * @return
+	 */
+	private double calculateCyclicFragmentWeight(String cyclicFragment, PeptideType type) {
+		double sum = 0;
+		
+		String[] split = cyclicFragment.split("#");
+		for (String fragment : split) {
+			double weight = calculateFragmentWeight(fragment);
+			sum += weight;
+		}
+		
+		switch (type) {
+			case DFBP:
+				sum = sum + this.weights.get('2') - (18.0 * 2);
+				break;
+			case DISULFIDE:
+				sum = sum + (this.weights.get('S') * 2 - 18.0) - (18.0 * 2);
+				break;
+			default:
+				break;
+			
+		}
+		
+		return sum;
 	}
 	
+	/**
+	 * Returns a map of <index of connection, list of fragments>. This is a convenient map where the key is the index where the connection is in a linear
+	 * fragment. If the key is -1, the list of linear fragments can be possible cyclic fragments.
+	 * 
+	 * @param connections
+	 * @return
+	 */
 	private Map<Integer, List<List<Integer>>> findConnectionsInFragments(List<Integer> connections) {
 		Map<Integer, List<List<Integer>>> connectionsInFragments = new HashMap<>();
 		
@@ -267,6 +373,14 @@ public class FragmentAnalyzer {
 		return connectionsInFragments;
 	}
 	
+	/**
+	 * Given a linear fragment and the connection points of a peptide, returns the index where the connection is in the linear fragment. Returns -1 
+	 * if the linear fragments has 2 connection fragments (possible cyclic fragment).
+	 * 
+	 * @param fragmentIndex
+	 * @param connections
+	 * @return
+	 */
 	private int determineConnectionInFragment(List<Integer> fragmentIndex, List<Integer> connections) {
 		int result = -2;
 		
@@ -282,12 +396,7 @@ public class FragmentAnalyzer {
 			result = connectionIndices.get(0);
 		}
 		else if (connectionIndices.size() == 2) {
-			int conn1 = fragmentIndex.indexOf(connectionIndices.get(0));
-			int conn2 = fragmentIndex.indexOf(connectionIndices.get(1));
-			
-			if (Math.abs(conn1 - conn2) > 1) {
-				result = -1;
-			}
+			result = -1;
 		}
 		
 		return result;
