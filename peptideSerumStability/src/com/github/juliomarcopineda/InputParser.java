@@ -56,7 +56,7 @@ public class InputParser {
 	 * Throws an IllegalArgumentException if the first line for each peptide contains an odd number of arguments. This suggests that the number of connection
 	 * indices entered was incorrect. The number of indices must be even to have a valid input.
 	 */
-	public void parse() {
+	public InputParser parse() {
 		// Initialize array list of peptides
 		List<Peptide> peptides = new ArrayList<>();
 		
@@ -116,6 +116,8 @@ public class InputParser {
 		}
 		
 		this.peptides = peptides;
+		
+		return this;
 	}
 	
 	/**

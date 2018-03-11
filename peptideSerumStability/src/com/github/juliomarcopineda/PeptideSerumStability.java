@@ -27,6 +27,15 @@ public class PeptideSerumStability {
 			
 			String inputFile = args[1];
 			String outputFile = args[2];
+			
+			List<Peptide> peptides = new InputParser(inputFile).parse()
+				.getPeptides();
+			
+			for (Peptide peptide : peptides) {
+				FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide).findAllFragments()
+					.measureAllFragmentWeights();
+				
+			}
 		}
 		else if (args[0].toLowerCase()
 			.equals("interactive")) {
