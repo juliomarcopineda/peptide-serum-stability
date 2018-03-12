@@ -16,8 +16,20 @@ import java.util.stream.IntStream;
 import com.github.juliomarcopineda.peptide.Peptide;
 import com.github.juliomarcopineda.peptide.PeptideType;
 
+/**
+ * PeptideSerumStability analyzes linear and cyclic peptides and determines if any fragments occur in a peptide serum stability study.
+ * This program has two modes: interactive and input.
+ * 
+ * The input mode accepts a text file with a pre-definited format to build the followi ng Peptide objects used for analysis. Then, this program will write
+ * a CSV file of the suggested fragments. Here are the following arguments for the input mode: [input] [input file] [output file] [threshold]
+ * 
+ * The interactive mode lets the user input the peptide and mass spectrometry data manually. The user also has options to print out all the possible
+ * fragments dependent on their size. The argument to start the interactive mode is: [interactive].
+ * 
+ * @author Julio Pineda
+ *
+ */
 public class PeptideSerumStability {
-	
 	public static void main(String[] args) {
 		if (args[0].toLowerCase()
 			.equals("input")) {
@@ -102,6 +114,14 @@ public class PeptideSerumStability {
 		}
 	}
 	
+	/**
+	 * Given a list of peptides, an output file and a user-definied threshold, writes to a CSV file the suggested fragments with the following format:
+	 * | Peptide | Mass Spec | Suggested Fragment | Calculated Weight |
+	 * 
+	 * @param peptides
+	 * @param outputFile
+	 * @param threshold
+	 */
 	private static void writeOutputFile(List<Peptide> peptides, String outputFile, double threshold) {
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
 			// Write header

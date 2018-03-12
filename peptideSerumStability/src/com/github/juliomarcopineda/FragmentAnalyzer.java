@@ -1,8 +1,9 @@
 package com.github.juliomarcopineda;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -560,8 +561,10 @@ public class FragmentAnalyzer {
 	private Map<Character, Double> createAminoAcideWeightMap() {
 		Map<Character, Double> aminoAcidWeight = new HashMap<>();
 		
+		InputStream weightsStream = FragmentAnalyzer.class.getResourceAsStream("/weights.csv");
+		
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader("../weights.csv"));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(weightsStream));
 			String line = reader.readLine(); // ignore header
 			while ((line = reader.readLine()) != null) {
 				
