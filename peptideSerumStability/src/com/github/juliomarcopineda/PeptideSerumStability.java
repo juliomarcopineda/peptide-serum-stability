@@ -1,6 +1,8 @@
 package com.github.juliomarcopineda;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
@@ -20,22 +22,19 @@ public class PeptideSerumStability {
 		if (args[0].toLowerCase()
 			.equals("input")) {
 			
-			if (args.length != 3) {
+			if (args.length != 4) {
 				System.out.println("Please add the right number of arguments for the choice \"input\"");
 				System.exit(1);
 			}
 			
 			String inputFile = args[1];
 			String outputFile = args[2];
+			double threshold = Double.parseDouble(args[3]);
 			
 			List<Peptide> peptides = new InputParser(inputFile).parse()
 				.getPeptides();
 			
-			for (Peptide peptide : peptides) {
-				FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide).findAllFragments()
-					.measureAllFragmentWeights();
-				
-			}
+			writeOutputFile(peptides, outputFile, threshold);
 		}
 		else if (args[0].toLowerCase()
 			.equals("interactive")) {
@@ -103,6 +102,37 @@ public class PeptideSerumStability {
 		}
 	}
 	
+	private static void writeOutputFile(List<Peptide> peptides, String outputFile, double threshold) {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+			// Write header
+			writer.write("Peptide,Mass Spec,Suggested Fragment,Calculated Weight\n");
+			
+			for (Peptide peptide : peptides) {
+				String peptideSequence = peptide.getSequence();
+				
+				FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide).findAllFragments()
+					.measureAllFragmentWeights();
+				
+				List<Double> massSpecData = peptide.getMassSpecData();
+				for (double data : massSpecData) {
+					Map<String, Double> suggestedFragments = analyzer.suggestFragments(data, threshold);
+					
+					if (suggestedFragments != null && !suggestedFragments.isEmpty()) {
+						for (Map.Entry<String, Double> entry : suggestedFragments.entrySet()) {
+							String suggestedFragment = entry.getKey();
+							double calculatedWeight = entry.getValue();
+							
+							writer.write(peptideSequence + "," + data + "," + suggestedFragment + "," + calculatedWeight + "\n");
+						}
+					}
+				}
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Given a fragment analyzer, runs the interactive session for the user in the command line.
 	 * 
@@ -132,7 +162,7 @@ public class PeptideSerumStability {
 						
 						System.out.print("Enter data from mass spectrometry: ");
 						double data = Double.parseDouble(br.readLine());
-						System.out.print("Enter threshold to comapre theoretical molecular weights (suggested 5.0): ");
+						System.out.print("Enter threshold to comapre theoretical molecular weights: ");
 						double threshold = Double.parseDouble(br.readLine());
 						System.out.println();
 						
