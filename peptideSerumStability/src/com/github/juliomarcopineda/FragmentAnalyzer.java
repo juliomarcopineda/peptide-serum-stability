@@ -131,8 +131,6 @@ public class FragmentAnalyzer {
 		for (List<Integer> fragmentWith1 : fragmentsWith1) {
 			List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
 			
-			// int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
-			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith1, type));
 			switch (type) {
@@ -151,6 +149,8 @@ public class FragmentAnalyzer {
 					
 					sb1.append("#S");
 					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					sb1.append("S");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
 					break;
 				case AMIDE:
 					break;
@@ -163,11 +163,8 @@ public class FragmentAnalyzer {
 			for (List<Integer> fragmentWith2 : fragmentsWith2) {
 				List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
 				
-				// int firstIndex = fragmentWith2.get(0);
-				
 				StringBuilder sb2 = new StringBuilder();
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-				// if (lastIndex != firstIndex) {
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
@@ -202,8 +199,6 @@ public class FragmentAnalyzer {
 		for (List<Integer> fragmentWith2 : fragmentsWith2) {
 			List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
 			
-			// int firstIndex = fragmentWith2.get(0);
-			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith2, type));
 			switch (type) {
@@ -222,6 +217,8 @@ public class FragmentAnalyzer {
 					
 					sb1.append("#S");
 					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					sb1.append("S");
+					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
 					break;
 				case AMIDE:
 					break;
@@ -234,11 +231,8 @@ public class FragmentAnalyzer {
 			for (List<Integer> fragmentWith1 : fragmentsWith1) {
 				List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
 				
-				// int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
-				
 				StringBuilder sb2 = new StringBuilder();
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-				// if (lastIndex != firstIndex) {
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
@@ -283,6 +277,16 @@ public class FragmentAnalyzer {
 		
 	}
 	
+	/**
+	 * Given the amino acids after the first connection and the amino acids before a connection, determines if the branched fragments is truly valid.
+	 * A branched fragment is only valid if the two inputs do not share any elements.
+	 * 
+	 * Returns true if the branched fragments is valid.
+	 * 
+	 * @param afterConnection1
+	 * @param beforeConnection2
+	 * @return
+	 */
 	private boolean isValidBranchedFragment(List<Integer> afterConnection1, List<Integer> beforeConnection2) {
 		int afterConnection1Size = afterConnection1.size();
 		int beforeConnection2Size = beforeConnection2.size();
