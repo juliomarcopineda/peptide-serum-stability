@@ -128,29 +128,42 @@ public class FragmentAnalyzer {
 		List<List<Integer>> fragmentsWith1 = connectionInFragments.get(connection1);
 		List<List<Integer>> fragmentsWith2 = connectionInFragments.get(connection2);
 		
+		// Start building branched fragment using linear fragment with the first connection
 		for (List<Integer> fragmentWith1 : fragmentsWith1) {
 			List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
 			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith1, type));
+			
+			// Append the linkers to the fragment (DFBP or S or SS) to form branched fragments
 			switch (type) {
 				case DFBP:
+					// Skip if the fragment contains DFBP
 					if (fragmentWith1.contains(peptideSequence.length())) {
 						continue;
 					}
 					
-					sb1.append("#2");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					// Only append DFBP if the connection is not in the beginning
+					if (fragmentWith1.get(0) != connection1) {
+						sb1.append("#2");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
 					break;
 				case DISULFIDE:
+					// Skip if the fragment contains S or SS
 					if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
 						continue;
 					}
 					
-					sb1.append("#S");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-					sb1.append("S");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					// Only append S then SS if the connection is not in the beginning
+					if (fragmentWith1.get(0) != connection1) {
+						sb1.append("#S");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+						sb1.append("S");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
 					break;
 				case AMIDE:
 					break;
@@ -160,7 +173,14 @@ public class FragmentAnalyzer {
 					break;
 			}
 			
+			// Start building branched fragments using the linear fragment with the second connection
 			for (List<Integer> fragmentWith2 : fragmentsWith2) {
+				
+				// Skip if appending two fragments would form a linear peptide
+				if (isLinear(fragmentWith1, connection1, fragmentWith2, connection2)) {
+					continue;
+				}
+				
 				List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
 				
 				StringBuilder sb2 = new StringBuilder();
@@ -168,6 +188,7 @@ public class FragmentAnalyzer {
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
+							// Skip if the fragment contains DFBP
 							if (fragmentWith2.contains(peptideSequence.length())) {
 								continue;
 							}
@@ -176,6 +197,7 @@ public class FragmentAnalyzer {
 							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
 							break;
 						case DISULFIDE:
+							// Skip if the fragment contains S or SS
 							if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
 								continue;
 							}
@@ -187,8 +209,6 @@ public class FragmentAnalyzer {
 							sb2.append("#" + getPeptideStringRepresentation(fragmentWith2, type));
 							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
 							break;
-						case LINEAR:
-							break;
 						default:
 							break;
 					}
@@ -196,39 +216,55 @@ public class FragmentAnalyzer {
 			}
 		}
 		
+		// Start forming branched fragments starting with fragments with the second connection
 		for (List<Integer> fragmentWith2 : fragmentsWith2) {
 			List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
 			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith2, type));
+			
+			// Append the linkers (DFBP or S or SS) to form possible branched fragments
 			switch (type) {
 				case DFBP:
+					// Skip if linear fragment contains DFBP
 					if (fragmentWith2.contains(peptideSequence.length())) {
 						continue;
 					}
 					
-					sb1.append("#2");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					// Only append DFBP if connection is not in the end of the fragment
+					if (fragmentWith2.get(fragmentWith2.size() - 1) != connection2) {
+						sb1.append("#2");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
 					break;
 				case DISULFIDE:
+					// Skip if linear fragment contains S or SS
 					if (fragmentWith2.contains(peptideSequence.length()) || fragmentWith2.contains(peptideSequence.length() + 1)) {
 						continue;
 					}
 					
-					sb1.append("#S");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-					sb1.append("S");
-					fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
-					break;
-				case AMIDE:
-					break;
-				case LINEAR:
+					// Only append S then SS if connection is not in the end of the fragment
+					if (fragmentWith2.get(fragmentWith2.size() - 1) != connection2) {
+						sb1.append("#S");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+						sb1.append("S");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
 					break;
 				default:
 					break;
 			}
 			
+			// Start building branched fragments using linear fragments with the first connection
 			for (List<Integer> fragmentWith1 : fragmentsWith1) {
+				
+				// Skip if appending two fragments would form a linear peptide
+				if (isLinear(fragmentWith1, connection1, fragmentWith2, connection2)) {
+					continue;
+				}
+				
 				List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
 				
 				StringBuilder sb2 = new StringBuilder();
@@ -236,6 +272,7 @@ public class FragmentAnalyzer {
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
+							// Skip if fragment contains DFBP
 							if (fragmentWith1.contains(peptideSequence.length())) {
 								continue;
 							}
@@ -245,6 +282,7 @@ public class FragmentAnalyzer {
 							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
 							break;
 						case DISULFIDE:
+							// Skip if fragment contains S or SS
 							if (fragmentWith1.contains(peptideSequence.length()) || fragmentWith1.contains(peptideSequence.length() + 1)) {
 								continue;
 							}
@@ -275,6 +313,27 @@ public class FragmentAnalyzer {
 			}
 		}
 		
+	}
+	
+	/**
+	 * Determines if appending fragment1 and fragment2 results in a linear peptide.
+	 * 
+	 * @param fragment1
+	 * @param connection1
+	 * @param fragment2
+	 * @param connection2
+	 * @return
+	 */
+	private boolean isLinear(List<Integer> fragment1, int connection1, List<Integer> fragment2, int connection2) {
+		if (fragment1.get(0) == connection1 && fragment2.get(fragment2.size() - 1) == connection2) {
+			return true;
+		}
+		else if (fragment1.get(fragment1.size() - 1) == connection1 && fragment2.get(0) == connection2) {
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 	
 	/**

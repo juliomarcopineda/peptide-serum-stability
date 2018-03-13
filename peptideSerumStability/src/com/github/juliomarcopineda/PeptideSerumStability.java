@@ -182,7 +182,7 @@ public class PeptideSerumStability {
 						
 						System.out.print("Enter data from mass spectrometry: ");
 						double data = Double.parseDouble(br.readLine());
-						System.out.print("Enter threshold to comapre theoretical molecular weights: ");
+						System.out.print("Enter threshold to compare theoretical molecular weights: ");
 						double threshold = Double.parseDouble(br.readLine());
 						System.out.println();
 						
