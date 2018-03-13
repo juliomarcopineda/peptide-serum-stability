@@ -20,7 +20,7 @@ import com.github.juliomarcopineda.peptide.PeptideType;
  * PeptideSerumStability analyzes linear and cyclic peptides and determines if any fragments occur in a peptide serum stability study.
  * This program has two modes: interactive and input.
  * 
- * The input mode accepts a text file with a pre-definited format to build the followi ng Peptide objects used for analysis. Then, this program will write
+ * The input mode accepts a text file with a pre-definited format to build the following Peptide objects used for analysis. Then, this program will write
  * a CSV file of the suggested fragments. Here are the following arguments for the input mode: [input] [input file] [output file] [threshold]
  * 
  * The interactive mode lets the user input the peptide and mass spectrometry data manually. The user also has options to print out all the possible
@@ -220,7 +220,7 @@ public class PeptideSerumStability {
 						
 						for (Map.Entry<String, Double> entry : fragments.entrySet()) {
 							String fragment = entry.getKey();
-							double weight = Math.round(entry.getValue() * 100.0) / 100.0;
+							double weight = entry.getValue();
 							
 							if (!fragment.contains("#")) {
 								int length = fragment.length();

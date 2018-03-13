@@ -129,7 +129,9 @@ public class FragmentAnalyzer {
 		List<List<Integer>> fragmentsWith2 = connectionInFragments.get(connection2);
 		
 		for (List<Integer> fragmentWith1 : fragmentsWith1) {
-			int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
+			List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
+			
+			// int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
 			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith1, type));
@@ -159,11 +161,14 @@ public class FragmentAnalyzer {
 			}
 			
 			for (List<Integer> fragmentWith2 : fragmentsWith2) {
-				int firstIndex = fragmentWith2.get(0);
+				List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
+				
+				// int firstIndex = fragmentWith2.get(0);
 				
 				StringBuilder sb2 = new StringBuilder();
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-				if (lastIndex != firstIndex) {
+				// if (lastIndex != firstIndex) {
+				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
 							if (fragmentWith2.contains(peptideSequence.length())) {
@@ -195,7 +200,9 @@ public class FragmentAnalyzer {
 		}
 		
 		for (List<Integer> fragmentWith2 : fragmentsWith2) {
-			int firstIndex = fragmentWith2.get(0);
+			List<Integer> beforeConnection2 = fragmentWith2.subList(0, fragmentWith2.indexOf(connection2) + 1);
+			
+			// int firstIndex = fragmentWith2.get(0);
 			
 			StringBuilder sb1 = new StringBuilder();
 			sb1.append(getPeptideStringRepresentation(fragmentWith2, type));
@@ -225,11 +232,14 @@ public class FragmentAnalyzer {
 			}
 			
 			for (List<Integer> fragmentWith1 : fragmentsWith1) {
-				int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
+				List<Integer> afterConnection1 = fragmentWith1.subList(fragmentWith1.indexOf(connection1), fragmentWith1.size());
+				
+				// int lastIndex = fragmentWith1.get(fragmentWith1.size() - 1);
 				
 				StringBuilder sb2 = new StringBuilder();
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
-				if (lastIndex != firstIndex) {
+				// if (lastIndex != firstIndex) {
+				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
 						case DFBP:
 							if (fragmentWith1.contains(peptideSequence.length())) {
@@ -271,6 +281,30 @@ public class FragmentAnalyzer {
 			}
 		}
 		
+	}
+	
+	private boolean isValidBranchedFragment(List<Integer> afterConnection1, List<Integer> beforeConnection2) {
+		int afterConnection1Size = afterConnection1.size();
+		int beforeConnection2Size = beforeConnection2.size();
+		
+		if (beforeConnection2Size < afterConnection1Size) {
+			List<Integer> difference = new ArrayList<>(afterConnection1);
+			difference.removeAll(beforeConnection2);
+			
+			if (difference.size() < afterConnection1Size) {
+				return false;
+			}
+		}
+		else {
+			List<Integer> difference = new ArrayList<>(beforeConnection2);
+			difference.removeAll(afterConnection1);
+			
+			if (difference.size() < beforeConnection2Size) {
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	/**
