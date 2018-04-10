@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,7 +23,7 @@ import com.github.juliomarcopineda.peptide.PeptideType;
  * PeptideSerumStability analyzes linear and cyclic peptides and determines if any fragments occur in a peptide serum stability study.
  * This program has two modes: interactive and input.
  * 
- * The input mode accepts a text file with a pre-definited format to build the following Peptide objects used for analysis. Then, this program will write
+ * The input mode accepts a text file with a pre-defined format to build the following Peptide objects used for analysis. Then, this program will write
  * a CSV file of the suggested fragments. Here are the following arguments for the input mode: [input] [input file] [output file] [threshold]
  * 
  * The interactive mode lets the user input the peptide and mass spectrometry data manually. The user also has options to print out all the possible
@@ -76,18 +79,17 @@ public class PeptideSerumStability {
 					
 					// Set the conenctions of the peptide
 					List<Integer> connections = new ArrayList<>();
-					if (!type.equals(PeptideType.LINEAR)) {
-						System.out.println("Please enter the indices where the cyclic conenctions are. Seperate the indices with commas.");
-						System.out.print("Connections: ");
-						String connectionsString = br.readLine();
-						System.out.println();
+					if (!type.equals(PeptideType.LINEAR)) { // only prompt for connections for cyclic peptides
 						
-						String[] split = connectionsString.split(",");
-						
-						for (String indexString : split) {
-							connections.add(Integer.parseInt(indexString));
+						while (connections.isEmpty() || hasDuplicates(connections)) {
+							connections.clear();
+							promptForConnections(connections, br);
 						}
+						
+						// Ensure that the connections are in increasing order
+						Collections.sort(connections);
 					}
+					
 					peptide.setConnections(connections);
 					
 					// Set the graph structure of the peptide
@@ -111,6 +113,39 @@ public class PeptideSerumStability {
 			catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	
+	private static boolean hasDuplicates(List<Integer> connections) {
+		Set<Integer> setCheck = new HashSet<>(connections);
+		
+		if (setCheck.size() < connections.size()) {
+			System.out.println("Please do not enter duplicate connections. Please try again.");
+			
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	private static void promptForConnections(List<Integer> connections, BufferedReader br) {
+		System.out.println("Please enter the indices where the cyclic conenctions are. Seperate the indices with commas.");
+		System.out.print("Connections: ");
+		String connectionsString = null;
+		try {
+			connectionsString = br.readLine();
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println();
+		
+		String[] split = connectionsString.split(",");
+		
+		for (String indexString : split) {
+			connections.add(Integer.parseInt(indexString));
 		}
 	}
 	

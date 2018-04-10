@@ -587,7 +587,7 @@ public class FragmentAnalyzer {
 			walkGraph(start, graph);
 		}
 		
-		System.out.println("Done");
+		System.out.println("Done!");
 		System.out.println();
 		return this;
 	}
