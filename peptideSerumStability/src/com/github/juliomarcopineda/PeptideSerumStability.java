@@ -287,8 +287,16 @@ public class PeptideSerumStability {
 								.add(connections.get(i + 1));
 						}
 						else {
-							graph.get(connections.get(i))
-								.add(connections.get(i - 1));
+							if (!graph.containsKey(connections.get(i))) { // connection is at the end of peptide
+								List<Integer> target = new ArrayList<>();
+								target.add(connections.get(i - 1));
+								
+								graph.put(connections.get(i), target);
+							}
+							else { // second connection is not at the end of peptide
+								graph.get(connections.get(i))
+									.add(connections.get(i - 1));
+							}
 						}
 					}
 					
@@ -311,8 +319,17 @@ public class PeptideSerumStability {
 						}
 						
 						// Add connections to DFBP
-						graph.get(connection)
-							.add(dfbpIndex);
+						if (!graph.containsKey(connection)) { // second connection is at the end of graph
+							List<Integer> target = new ArrayList<>();
+							target.add(dfbpIndex);
+							
+							graph.put(connection, target);
+						}
+						else {
+							graph.get(connection)
+								.add(dfbpIndex);
+						}
+						
 					}
 					
 					break;
@@ -333,8 +350,17 @@ public class PeptideSerumStability {
 					// Add connections from peptide base
 					graph.get(connections.get(0))
 						.add(s1Index);
-					graph.get(connections.get(1))
-						.add(s2Index);
+					
+					if (!graph.containsKey(connections.get(1))) { // second connection is at end of peptide
+						List<Integer> target = new ArrayList<>();
+						target.add(s2Index);
+						
+						graph.put(connections.get(1), target);
+					}
+					else {
+						graph.get(connections.get(1))
+							.add(s2Index);
+					}
 					
 					// Add connections from disulfide bridge
 					graph.get(s1Index)

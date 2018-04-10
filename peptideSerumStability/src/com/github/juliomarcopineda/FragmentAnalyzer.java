@@ -6,8 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.github.juliomarcopineda.peptide.Peptide;
 import com.github.juliomarcopineda.peptide.PeptideType;
@@ -127,6 +129,11 @@ public class FragmentAnalyzer {
 		
 		List<List<Integer>> fragmentsWith1 = connectionInFragments.get(connection1);
 		List<List<Integer>> fragmentsWith2 = connectionInFragments.get(connection2);
+		
+		// Stop finding branched fragments if there are no fragments with connections
+		if (fragmentsWith1 == null || fragmentsWith2 == null || fragmentsWith1.isEmpty() || fragmentsWith2.isEmpty()) {
+			return;
+		}
 		
 		// Start building branched fragment using linear fragment with the first connection
 		for (List<Integer> fragmentWith1 : fragmentsWith1) {
@@ -304,6 +311,11 @@ public class FragmentAnalyzer {
 		}
 		
 		List<List<Integer>> possibleCyclicFragments = connectionInFragments.get(-1);
+		
+		// Stop finding cyclic fragments if there are no possible cyclic fragments
+		if (possibleCyclicFragments == null || possibleCyclicFragments.isEmpty()) {
+			return;
+		}
 		
 		for (List<Integer> possibleCyclicFragmentIndex : possibleCyclicFragments) {
 			if (isCyclicFragment(possibleCyclicFragmentIndex, connections)) {
@@ -566,7 +578,7 @@ public class FragmentAnalyzer {
 	 * Initiates the process of finding all the possible fragments of the peptide.
 	 */
 	public FragmentAnalyzer findAllFragments() {
-		System.out.println("Finding all peptde fragments...");
+		System.out.println("Finding all peptide fragments...");
 		
 		Map<Integer, List<Integer>> graph = this.peptide.getGraph();
 		for (Map.Entry<Integer, List<Integer>> entry : graph.entrySet()) {
@@ -604,7 +616,7 @@ public class FragmentAnalyzer {
 	 * The before parameter keeps track of the last node visited by the algorithm. This prevents the traversing to go back prematurely and also prevent
 	 * an infinite loop in the linker of cyclic peptides.
 	 * The start parameter indicates the current location of traversing the graph.
-	 * The fragmentIndex keeps track of the traversed nodes during the recursive backtrackign step.
+	 * The fragmentIndex keeps track of the traversed nodes during the recursive backtracking step.
 	 * 
 	 * This method also saves all possible fragments visited by the algorithm into the fragments field.
 	 * 
@@ -615,7 +627,10 @@ public class FragmentAnalyzer {
 	 * @param fragmentIndex
 	 */
 	private void walkGraph(int root, int before, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex) {
-		if (!graph.containsKey(start)) { // Traversed the end of the peptide
+		if (!graph.containsKey(start)) { // Traversed the end of the peptide, the graph does not have a key for the end of the peptide
+			return;
+		}
+		else if (hasDuplicates(fragmentIndex)) { // Illegal fragment. Fragments can't have the same amino acid in multiple positions
 			return;
 		}
 		else {
@@ -647,6 +662,17 @@ public class FragmentAnalyzer {
 				// Backtracking step when finding a terminal/base case
 				fragmentIndex.remove(fragmentIndex.size() - 1);
 			}
+		}
+	}
+	
+	private boolean hasDuplicates(List<Integer> fragmentIndex) {
+		Set<Integer> setCheck = new HashSet<>(fragmentIndex);
+		
+		if (setCheck.size() < fragmentIndex.size()) {
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 	

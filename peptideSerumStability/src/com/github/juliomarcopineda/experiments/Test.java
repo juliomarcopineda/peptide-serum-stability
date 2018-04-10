@@ -15,28 +15,55 @@ import com.github.juliomarcopineda.peptide.PeptideType;
 
 public class Test {
 	public static void main(String[] args) {
+		// Prevent equal connections
+		// Prevent connections in decreasing order
+		
 		String peptideSequence = "CGYEQDPWGVRYWYGCKKKKB";
-		List<Integer> connections = Arrays.asList(0, 15);
-		// List<Integer> connections = new ArrayList<>();
-		PeptideType type = PeptideType.DFBP;
-		Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, connections, type);
 		
-		Peptide peptide = new Peptide();
-		peptide.setSequence(peptideSequence);
-		peptide.setConnections(connections);
-		peptide.setType(type);
-		peptide.setGraph(graph);
+		for (int conn1 = 0; conn1 < peptideSequence.length() - 1; conn1++) {
+			for (int conn2 = conn1 + 1; conn2 < peptideSequence.length(); conn2++) {
+				if (conn1 == conn2) {
+					continue;
+				}
+				
+				List<Integer> connections = Arrays.asList(conn1, conn2);
+				
+				for (PeptideType type : PeptideType.values()) {
+					
+					try {
+						Map<Integer, List<Integer>> graph = createGraphStructure(peptideSequence, connections, type);
+						
+						Peptide peptide = new Peptide();
+						peptide.setSequence(peptideSequence);
+						peptide.setConnections(connections);
+						peptide.setType(type);
+						peptide.setGraph(graph);
+						
+						FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide);
+						analyzer.findAllFragments()
+							.measureAllFragmentWeights();
+					}
+					catch (Exception e) {
+						System.out.println("ERROR!");
+						System.out.println(type);
+						System.out.println("Connection 1: " + conn1);
+						System.out.println("Connection 2: " + conn2);
+						
+						e.printStackTrace();
+						System.exit(-1);
+						
+					}
+					
+				}
+			}
+		}
 		
-		FragmentAnalyzer analyzer = new FragmentAnalyzer(peptide);
-		analyzer.findAllFragments()
-			.measureAllFragmentWeights();
-		
-		Map<String, Double> fragments = analyzer.getFragmentWeights();
-		fragments.entrySet()
-			.stream()
-			.filter(e -> e.getKey()
-				.charAt(0) == '#')
-			.forEach(System.out::println);
+		//		Map<String, Double> fragments = analyzer.getFragmentWeights();
+		//				fragments.entrySet()
+		//					.stream()
+		//					.filter(e -> e.getKey()
+		//						.contains("#"))
+		//					.forEach(System.out::println);
 		
 		//		double threshold = 5.0;
 		//		double massSpecData = 655.74;
@@ -48,7 +75,6 @@ public class Test {
 	}
 	
 	private static Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
-		
 		// Create the graph structure of the peptide base sequence
 		Map<Integer, List<Integer>> graph = IntStream.range(0, peptideSequence.length() - 1)
 			.mapToObj(source -> {
@@ -72,8 +98,16 @@ public class Test {
 								.add(connections.get(i + 1));
 						}
 						else {
-							graph.get(connections.get(i))
-								.add(connections.get(i - 1));
+							if (!graph.containsKey(connections.get(i))) { // connection is at the end of peptide
+								List<Integer> target = new ArrayList<>();
+								target.add(connections.get(i - 1));
+								
+								graph.put(connections.get(i), target);
+							}
+							else { // second connection is not at the end of peptide
+								graph.get(connections.get(i))
+									.add(connections.get(i - 1));
+							}
 						}
 					}
 					
@@ -96,8 +130,17 @@ public class Test {
 						}
 						
 						// Add connections to DFBP
-						graph.get(connection)
-							.add(dfbpIndex);
+						if (!graph.containsKey(connection)) { // second connection is at the end of graph
+							List<Integer> target = new ArrayList<>();
+							target.add(dfbpIndex);
+							
+							graph.put(connection, target);
+						}
+						else {
+							graph.get(connection)
+								.add(dfbpIndex);
+						}
+						
 					}
 					
 					break;
@@ -118,8 +161,17 @@ public class Test {
 					// Add connections from peptide base
 					graph.get(connections.get(0))
 						.add(s1Index);
-					graph.get(connections.get(1))
-						.add(s2Index);
+					
+					if (!graph.containsKey(connections.get(1))) { // second connection is at end of peptide
+						List<Integer> target = new ArrayList<>();
+						target.add(s2Index);
+						
+						graph.put(connections.get(1), target);
+					}
+					else {
+						graph.get(connections.get(1))
+							.add(s2Index);
+					}
 					
 					// Add connections from disulfide bridge
 					graph.get(s1Index)
