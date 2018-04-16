@@ -4,5 +4,6 @@ public enum PeptideType {
 	AMIDE,
 	DISULFIDE,
 	DFBP,
-	LINEAR;
+	LINEAR,
+	CUSTOM;
 }

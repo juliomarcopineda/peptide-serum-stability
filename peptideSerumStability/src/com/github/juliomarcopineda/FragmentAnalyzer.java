@@ -23,6 +23,7 @@ import com.github.juliomarcopineda.peptide.PeptideType;
 public class FragmentAnalyzer {
 	private Peptide peptide;
 	private Map<Character, Double> weights;
+	private double customWeight;
 	
 	private List<List<Integer>> fragments;
 	private Map<String, Double> fragmentWeights;

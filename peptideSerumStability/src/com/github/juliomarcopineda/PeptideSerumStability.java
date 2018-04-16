@@ -68,7 +68,7 @@ public class PeptideSerumStability {
 				peptide.setSequence(peptideSequence);
 				
 				// Set the peptide type
-				System.out.println("Please enter the peptide type (linear, amide, DFBP, disulfide)");
+				System.out.println("Please enter the peptide type (linear, amide, DFBP, disulfide, custom)");
 				System.out.print("Peptide Type: ");
 				
 				String typeString = br.readLine();
@@ -98,7 +98,7 @@ public class PeptideSerumStability {
 					
 				}
 				catch (IllegalArgumentException e) {
-					System.out.println("Please input a valid peptide type (linear, amide, DFBP, disulfide)");
+					System.out.println("Please input a valid peptide type (linear, amide, DFBP, disulfide, custom)");
 					System.exit(1);
 				}
 				
@@ -315,6 +315,38 @@ public class PeptideSerumStability {
 		// Add any cyclic connections if connections is not empty
 		if (!connections.isEmpty()) {
 			switch (type) {
+				case CUSTOM:
+					// Set index of CUSTOM to the length of the peptide sequence
+					int customIndex = peptideSequence.length();
+					
+					for (int connection : connections) {
+						// Add connections from CUSTOM
+						if (!graph.containsKey(customIndex)) {
+							List<Integer> targets = new ArrayList<>();
+							targets.add(connection);
+							
+							graph.put(customIndex, targets);
+						}
+						else {
+							graph.get(customIndex)
+								.add(connection);
+						}
+						
+						// Add connections to CUSTOM
+						if (!graph.containsKey(connection)) { // second connection is at the end of the graph
+							List<Integer> targets = new ArrayList<>();
+							targets.add(connection);
+							
+							graph.put(connection, targets);
+						}
+						else {
+							graph.get(connection)
+								.add(customIndex);
+						}
+					}
+					
+					break;
+				
 				case AMIDE:
 					for (int i = 0; i < connections.size(); i++) {
 						if (i % 2 == 0) {
@@ -355,10 +387,10 @@ public class PeptideSerumStability {
 						
 						// Add connections to DFBP
 						if (!graph.containsKey(connection)) { // second connection is at the end of graph
-							List<Integer> target = new ArrayList<>();
-							target.add(dfbpIndex);
+							List<Integer> targets = new ArrayList<>();
+							targets.add(dfbpIndex);
 							
-							graph.put(connection, target);
+							graph.put(connection, targets);
 						}
 						else {
 							graph.get(connection)
