@@ -23,7 +23,6 @@ import com.github.juliomarcopineda.peptide.PeptideType;
 public class FragmentAnalyzer {
 	private Peptide peptide;
 	private Map<Character, Double> weights;
-	private double customWeight;
 	
 	private List<List<Integer>> fragments;
 	private Map<String, Double> fragmentWeights;
@@ -107,8 +106,6 @@ public class FragmentAnalyzer {
 		this.fragmentWeights = fragmentWeights;
 		
 		System.out.println("Done!");
-		System.out.println();
-		
 		return this;
 	}
 	
@@ -448,13 +445,18 @@ public class FragmentAnalyzer {
 		}
 		
 		switch (type) {
+			case CUSTOM:
+				sum = sum + this.weights.get('%') - (18.0 * 2);
+				break;
 			case DFBP:
 				sum = sum + this.weights.get('2') - (18.0 * 2);
 				break;
 			case DISULFIDE:
 				sum = sum + (this.weights.get('S') * 2 - 18.0) - (18.0 * 2);
 				break;
-			default:
+			case AMIDE:
+				break;
+			case LINEAR:
 				break;
 			
 		}
@@ -537,6 +539,9 @@ public class FragmentAnalyzer {
 			}
 			else {
 				switch (type) {
+					case CUSTOM:
+						stringBuilder.append("%");
+						break;
 					case DFBP:
 						stringBuilder.append("2");
 						break;
@@ -546,8 +551,6 @@ public class FragmentAnalyzer {
 					case LINEAR:
 						break;
 					case AMIDE:
-						break;
-					default:
 						break;
 				}
 			}
@@ -589,7 +592,6 @@ public class FragmentAnalyzer {
 		}
 		
 		System.out.println("Done!");
-		System.out.println();
 		return this;
 	}
 	
@@ -703,6 +705,10 @@ public class FragmentAnalyzer {
 		}
 		catch (IOException e) {
 			e.printStackTrace();
+		}
+		
+		if (this.peptide.getCustomWeight() != 0) {
+			aminoAcidWeight.put('%', this.peptide.getCustomWeight());
 		}
 		
 		return aminoAcidWeight;

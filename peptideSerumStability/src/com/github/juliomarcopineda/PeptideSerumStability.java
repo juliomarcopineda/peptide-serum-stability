@@ -72,6 +72,18 @@ public class PeptideSerumStability {
 				System.out.print("Peptide Type: ");
 				
 				String typeString = br.readLine();
+				
+				// If user inputs a custom cyclization moeity
+				double customWeight = 0;
+				if (typeString.toUpperCase()
+					.equals("CUSTOM")) {
+					System.out.println("What is the molecular weight of the CUSTOM cyclization moiety?");
+					System.out.print("Molecular Weight: ");
+					
+					customWeight = Double.parseDouble(br.readLine());
+				}
+				peptide.setCustomWeight(customWeight);
+				
 				System.out.println();
 				try {
 					PeptideType type = PeptideType.valueOf(typeString.toUpperCase());
@@ -130,7 +142,7 @@ public class PeptideSerumStability {
 	}
 	
 	private static void promptForConnections(List<Integer> connections, BufferedReader br) {
-		System.out.println("Please enter the indices where the cyclic conenctions are. Seperate the indices with commas.");
+		System.out.println("Please enter the indices where the cyclic connections are. Separate the indices with commas.");
 		System.out.print("Connections: ");
 		String connectionsString = null;
 		try {
@@ -298,7 +310,7 @@ public class PeptideSerumStability {
 	 * @param type
 	 * @return
 	 */
-	private static Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
+	public static Map<Integer, List<Integer>> createGraphStructure(String peptideSequence, List<Integer> connections, PeptideType type) {
 		// Create the graph structure of the peptide base sequence
 		Map<Integer, List<Integer>> graph = IntStream.range(0, peptideSequence.length() - 1)
 			.mapToObj(source -> {

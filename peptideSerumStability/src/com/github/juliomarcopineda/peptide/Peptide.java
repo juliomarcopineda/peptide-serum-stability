@@ -16,6 +16,15 @@ public class Peptide {
 	private List<Integer> connections;
 	private Map<Integer, List<Integer>> graph;
 	private List<Double> massSpecData;
+	private double customWeight;
+	
+	public double getCustomWeight() {
+		return customWeight;
+	}
+	
+	public void setCustomWeight(double customWeight) {
+		this.customWeight = customWeight;
+	}
 	
 	public List<Integer> getConnections() {
 		return connections;
