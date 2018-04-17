@@ -142,6 +142,19 @@ public class FragmentAnalyzer {
 			
 			// Append the linkers to the fragment (DFBP or S or SS) to form branched fragments
 			switch (type) {
+				case CUSTOM:
+					// Skip if the fragment contains CUSTOM
+					if (fragmentWith1.contains(peptideSequence.length())) {
+						continue;
+					}
+					
+					// Only append CUSTOM if the connection is not in the beginning
+					if (fragmentWith1.get(0) != connection1) {
+						sb1.append("#%");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
+					break;
 				case DFBP:
 					// Skip if the fragment contains DFBP
 					if (fragmentWith1.contains(peptideSequence.length())) {
@@ -174,8 +187,6 @@ public class FragmentAnalyzer {
 					break;
 				case LINEAR:
 					break;
-				default:
-					break;
 			}
 			
 			// Start building branched fragments using the linear fragment with the second connection
@@ -192,6 +203,15 @@ public class FragmentAnalyzer {
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
+						case CUSTOM:
+							// Skip if the fragment contains CUSTOM
+							if (fragmentWith2.contains(peptideSequence.length())) {
+								continue;
+							}
+							
+							sb2.append("#%#" + getPeptideStringRepresentation(fragmentWith2, type));
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
 						case DFBP:
 							// Skip if the fragment contains DFBP
 							if (fragmentWith2.contains(peptideSequence.length())) {
@@ -214,7 +234,7 @@ public class FragmentAnalyzer {
 							sb2.append("#" + getPeptideStringRepresentation(fragmentWith2, type));
 							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
 							break;
-						default:
+						case LINEAR:
 							break;
 					}
 				}
@@ -230,6 +250,19 @@ public class FragmentAnalyzer {
 			
 			// Append the linkers (DFBP or S or SS) to form possible branched fragments
 			switch (type) {
+				case CUSTOM:
+					// Skip if linear fragment contains CUSTOM
+					if (fragmentWith2.contains(peptideSequence.length())) {
+						continue;
+					}
+					
+					// Only append CUSTOM if connection is not in the end of the fragment
+					if (fragmentWith2.get(fragmentWith2.size() - 1) != connection2) {
+						sb1.append("#%");
+						fragmentWeights.put(sb1.toString(), calculateBranchedFragmentWeight(sb1.toString()));
+					}
+					
+					break;
 				case DFBP:
 					// Skip if linear fragment contains DFBP
 					if (fragmentWith2.contains(peptideSequence.length())) {
@@ -258,7 +291,9 @@ public class FragmentAnalyzer {
 					}
 					
 					break;
-				default:
+				case AMIDE:
+					break;
+				case LINEAR:
 					break;
 			}
 			
@@ -276,6 +311,16 @@ public class FragmentAnalyzer {
 				sb2.append(getPeptideStringRepresentation(fragmentWith1, type));
 				if (isValidBranchedFragment(afterConnection1, beforeConnection2)) {
 					switch (type) {
+						case CUSTOM:
+							// Skip if fragment contains CUSTOM
+							if (fragmentWith1.contains(peptideSequence.length())) {
+								continue;
+							}
+							
+							sb2.append("#%#" + getPeptideStringRepresentation(fragmentWith1, type));
+							
+							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
+							break;
 						case DFBP:
 							// Skip if fragment contains DFBP
 							if (fragmentWith1.contains(peptideSequence.length())) {
@@ -300,8 +345,6 @@ public class FragmentAnalyzer {
 							fragmentWeights.put(sb2.toString(), calculateBranchedFragmentWeight(sb2.toString()));
 							break;
 						case LINEAR:
-							break;
-						default:
 							break;
 					}
 				}
