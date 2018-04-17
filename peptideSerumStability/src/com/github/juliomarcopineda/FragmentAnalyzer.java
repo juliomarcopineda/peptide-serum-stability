@@ -630,10 +630,10 @@ public class FragmentAnalyzer {
 	 * @param fragmentIndex
 	 */
 	private void walkGraph(int root, int before, int start, Map<Integer, List<Integer>> graph, List<Integer> fragmentIndex) {
-		if (!graph.containsKey(start)) { // Traversed the end of the peptide, the graph does not have a key for the end of the peptide
+		if (!graph.containsKey(start)) { // Base case: end of the peptide. The last amino acid has no targets in the graph.
 			return;
 		}
-		else if (hasDuplicates(fragmentIndex)) { // Illegal fragment. Fragments can't have the same amino acid in multiple positions
+		else if (hasDuplicates(fragmentIndex)) { // Base case: cycle has formed. Cycle is formed whenever a duplicate occurs.
 			return;
 		}
 		else {
@@ -645,10 +645,6 @@ public class FragmentAnalyzer {
 				
 				if (target == before) { // Prevents walk to backtrack
 					continue;
-				}
-				
-				if (root == target) { // Formed a cycle and terminates walk in this direction
-					return;
 				}
 				
 				// Keeping track of traversed nodes

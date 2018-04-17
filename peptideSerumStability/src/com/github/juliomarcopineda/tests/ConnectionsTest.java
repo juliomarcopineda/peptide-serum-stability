@@ -13,6 +13,13 @@ import com.github.juliomarcopineda.PeptideSerumStability;
 import com.github.juliomarcopineda.peptide.Peptide;
 import com.github.juliomarcopineda.peptide.PeptideType;
 
+/**
+ * This class iterates over all the possible connections and stapling peptide types of a test peptide. Outputs the
+ * log into a text file.
+ * 
+ * @author Julio Pineda
+ *
+ */
 public class ConnectionsTest {
 	public static void main(String[] args) {
 		// Prevent equal connections
